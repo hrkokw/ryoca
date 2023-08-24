@@ -1,0 +1,21 @@
+The default limit of data window is 8MB (despite 16MB is claimed in docs)
+as of 20100106, which is practically too small to process emails. Postfix's
+`message_size_limit' defaults to 10240000 bytes (approx. 9.8MB).
+
+Although the limit can be adjusted by `-w' command-line option, it's not
+the case when you write scripts with shebang like `#!/usr/bin/crm114 -w NN`.
+I believe there's no way other than patching like this.
+
+--- a/crm114_config.h
++++ b/crm114_config.h
+@@ -38,8 +38,8 @@
+ //   infinite loop...
+ #define DEFAULT_MAX_INSERTS 1024
+ 
+-//   default size of the data window: 8 megabytes.
+-#define DEFAULT_DATA_WINDOW  8388608
++//   default size of the data window: 48 megabytes.
++#define DEFAULT_DATA_WINDOW  50331648
+ //#define DEFAULT_DATA_WINDOW 16777216
+ //#define DEFAULT_DATA_WINDOW 1048576
+ 

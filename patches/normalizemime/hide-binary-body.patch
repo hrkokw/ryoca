@@ -1,0 +1,16 @@
+This patch avoids printing decoded binary body
+which seems useless for learning/classifying.
+
+--- a/normalizemime.cc
++++ b/normalizemime.cc
+@@ -1481,8 +1481,8 @@
+     }
+   } else if (content_type == "message/rfc822") {
+     normalize (message);
+-  } else if (message.length() > 2*1024) {
+-    message.erase (2*1024);
++  } else {
++    message.erase ();
+   }
+   message += decodingerror;
+ 

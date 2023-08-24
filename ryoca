@@ -1,0 +1,264 @@
+#! /usr/bin/crm114 -( fileprefix learn=good learn=junk correct force verbose dumptokens ) --
+
+# possible command-line options
+isolate (:fileprefix:) /:*:_env_HOME:\/.ryoca/ <default>
+isolate (:learn:)
+isolate (:correct:)
+isolate (:force:)
+isolate (:verbose:)
+isolate (:dumptokens:)
+
+# css file names
+isolate (:goodcss:) /good.css/
+isolate (:junkcss:) /junk.css/
+
+# external command(s) to pre-process text for learning/classifying
+isolate (:text_preprocessor:) / normalizemime | wktng /
+
+# regex to split tokens for learning/classifying
+isolate (:lcr_ascii:) /[[:graph:]]+/
+isolate (:lcr_nonascii:) /[^[:graph:][:space:][:cntrl:]]+/
+isolate (:lcr:) /(:*:lcr_ascii:|:*:lcr_nonascii:)/
+
+# classifying flags and threshold
+isolate (:clf:) /osb unique microgroom/
+isolate (:thick_threshold:) /5.0/
+
+############################################################
+# processing starts here
+
+# prepare fileprefix
+{
+	# add trailing slash
+	{
+		match [:fileprefix:] /[^\/]$/
+		alter (:fileprefix:) /:*:fileprefix:\//
+	}
+	# create directory and files if absent
+	syscall / test -d :*:fileprefix: || install -d :*:fileprefix: -m 0700 /
+	syscall / test -f :*:fileprefix::*:goodcss: || cssutil -b -r :*:fileprefix::*:goodcss: >\/dev\/null /
+	syscall / test -f :*:fileprefix::*:junkcss: || cssutil -b -r :*:fileprefix::*:junkcss: >\/dev\/null /
+}
+
+# preprocess input text
+{
+	isolate (:processed_input:)
+	syscall (:*:_dw:) (:processed_input:) / :*:text_preprocessor: /
+}
+
+# for debugging: print each token according to :lcr:, and exit
+{
+	match [:dumptokens:] /SET/
+	{
+		match <fromend> [:processed_input:] /:*:lcr:/ (:token:)
+		output /[:*:token:]:*:_nl:/
+		liaf
+	}
+	goto /:exit_here:/
+}
+
+# classify
+{
+	isolate (:classify_status:)
+	classify <:*:clf:> [:processed_input:] /:*:lcr:/ \
+		(:*:fileprefix::*:goodcss: :*:fileprefix::*:junkcss:) \
+		(:classify_status:)
+
+	isolate (:pr:)
+	match [:classify_status:] <nomultiline> \
+		/^#0.* pR: *([-.0-9]+)/ ( :: :pr: )
+
+	isolate (:classify_result:) /X-CRM114-Status:/
+	{
+		{
+			eval /:@: :*:pr: > :*:thick_threshold: :/
+			alter (:classify_result:) /:*:classify_result: Good/
+		}
+		alius
+		{
+			eval /:@: :*:pr: < (0 - :*:thick_threshold:) :/
+			alter (:classify_result:) /:*:classify_result: Junk/
+		}
+		alius
+		{
+			alter (:classify_result:) /:*:classify_result: Unsure/
+		}
+	}
+	alter (:classify_result:) /:*:classify_result: (pR=:*:pr:)/
+	call /:output_log:/ [:*:classify_result::*:_nl:]
+}
+
+# learn and exit if told & needed to
+{
+	{
+		match [:learn:] /good/
+		{
+			{
+				match [:classify_result:] /Good/
+				match [:force:] <absent> /SET/
+				call /:output_log:/ [Skip learning (already Good):*:_nl:]
+			}
+			alius
+			{
+				call /:output_log:/ [Learn as Good]
+				learn <:*:clf:> [:processed_input:] /:*:lcr:/ \
+					(:*:fileprefix::*:goodcss:)
+				{
+					match [:correct:] /SET/
+					call /:output_log:/ [ with correction]
+					learn <:*:clf: refute> [:processed_input:] /:*:lcr:/ \
+						(:*:fileprefix::*:junkcss:)
+				}
+				call /:output_log:/ [:*:_nl:]
+			}
+		}
+		goto /:exit_here:/
+	}
+	alius
+	{
+		match [:learn:] /junk/
+		{
+			{
+				match [:classify_result:] /Junk/
+				match [:force:] <absent> /SET/
+				call /:output_log:/ [Skip learning (already Junk):*:_nl:]
+			}
+			alius
+			{
+				call /:output_log:/ [Learn as Junk]
+				learn <:*:clf:> [:processed_input:] /:*:lcr:/ \
+					(:*:fileprefix::*:junkcss:)
+				{
+					match [:correct:] /SET/
+					call /:output_log:/ [ with correction]
+					learn <:*:clf: refute> [:processed_input:] /:*:lcr:/ \
+						(:*:fileprefix::*:goodcss:)
+				}
+				call /:output_log:/ [:*:_nl:]
+			}
+		}
+		goto /:exit_here:/
+	}
+}
+
+# add header and print
+{
+	call /:mungmail_unique:/ [:*:classify_result:]
+	accept
+}
+
+# exit normally
+:exit_here:
+exit /0/
+
+############################################################
+# routine & trap definitions
+
+############################################################
+#
+# verbose output
+#
+:output_log: (:log_message:)
+{
+	{
+		match [:verbose:] /SET/
+		output [stderr] /:*:log_message:/
+	}
+	return
+}
+
+############################################################
+#
+# Mungmail - borrowed from mailfilter.crm
+# These are the replacement routines for formail(), to remove dependency on
+# formail() being in every distribution
+#
+# Add a new header
+#
+:mungmail_add: (:new_header:)
+{
+	# Grab the current headers
+	call /:mungmail_grab_current_headers:/
+	{
+		# respect the original newline sequence
+		{
+			match [:current_headers:] /\r\n/
+			alter (:current_headers:) /:*:current_headers::*:new_header:\r\n/
+		}
+		alius
+		{
+			alter (:current_headers:) /:*:current_headers::*:new_header:\n/
+		}
+	}
+	return
+}
+#
+# Delete all current headers of this type, insert ours instead.
+#
+:mungmail_delete: (:new_header:)
+{
+	call /:mungmail_grab_current_headers:/
+	{
+		match (:new_header_type:) [:new_header:] /[[:graph:]]+/
+	}
+	# a LIAF-loop to delete any header (including continuations) that has a type
+	# that matches the new_header_type.
+	{
+		match [:current_headers:] (:kill_this_line:) \
+			/:*:new_header_type: ([^\n]|\n[[:space:]])*\n/
+		alter (:kill_this_line:) //
+		liaf
+	}
+	return
+}
+#
+# Delete all current headers of this type, insert ours instead.
+#
+:mungmail_unique: (:new_header:)
+{
+	call /:mungmail_grab_current_headers:/
+	{
+		match (:new_header_type:) [:new_header:] /[[:graph:]]+/
+	}
+	call /:mungmail_delete:/ [:*:new_header:]
+	call /:mungmail_add:/ [:*:new_header:]
+	return
+}
+#
+#  Helper routine to get the current mail headers of :_dw:
+#
+:mungmail_grab_current_headers:
+{
+	{
+		# Grab everything before the first blank line
+		match (:: :current_headers:) /(([^\r\n]+\r?\n)+)\r?\n/
+		return
+	}
+	# if we got here, it wasn't a real message (void body, and/or no doubled
+	# newline) but it might still have useful text anyway.
+	# Is there a final newline?
+	{
+		match (:current_headers:) /^.*\n$/
+		return
+	}
+	# if we got to here, then there wasn't even a final newline.
+	# That's a violation of RFC, we'll add it.
+	{
+		alter (:_dw:) /:*:_dw:\n/
+		match (:current_headers:) /.+/
+		return
+	}
+	fault / Couldn't manage to find the headers, though I tried really hard\n/
+}
+
+############################################################
+#
+# global fault trap
+#
+trap (:broken_program_message:) /.*/
+{
+	output [stderr] /:*:broken_program_message:/
+}
+exit /1/
+
+# vim: syntax=crm tabstop=2 shiftwidth=2

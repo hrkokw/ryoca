@@ -1,0 +1,35 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+use utf8;
+use Encode;
+
+my $n = 3;
+
+#sub _usage {
+#	printf(STDERR "Usage: %s [-n N] < input_file\n", __FILE__);
+#	exit 1;
+#}
+#use Getopt::Long;
+#GetOptions('n=i' => \$n) or _usage();
+
+while ($_ = Encode::decode_utf8(<STDIN>)) {
+	while (/ (?: \p{ascii}+ | \P{ascii}+ ) /gpx) {
+		for (my $part = ${^MATCH}) {
+			if (/^ \p{ascii}+ $/x) {
+				print $part;
+			}
+			else {
+				my @mbchars = split(//, $part);
+				my @ngrams;
+				for (my $offset = 0; $offset == 0 or $offset <= scalar(@mbchars) - $n; $offset++) {
+					push @ngrams, join('', splice(@{[ @mbchars ]}, $offset, $n));
+				}
+				print Encode::encode_utf8(join(' ', '', @ngrams, ''));
+			}
+		}
+	}
+}
+
+# vim: tabstop=4 shiftwidth=4

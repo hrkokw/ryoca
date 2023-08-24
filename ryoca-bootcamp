@@ -1,0 +1,34 @@
+#!/bin/bash
+
+targets=(
+	"good:$HOME/Maildir/.Archives/cur"
+	"junk:$HOME/Maildir/.Junk/cur"
+)
+max_rounds=10
+
+# Ryoca default: CHANGE IF NEEDED
+fileprefix="$HOME/.ryoca"
+goodcss="good.css"
+junkcss="junk.css"
+
+rm -rfv ${fileprefix}.old
+mv -v ${fileprefix} ${fileprefix}.old
+
+for round in `seq 1 $max_rounds`; do
+	echo "[Round $round]"
+	learned=0
+
+	for target in ${targets[@]}; do
+		for mail in $(find "${target#*:}" -type f | sort); do
+			if ryoca --learn=${target%:*} --verbose < "$mail" 2>&1 >/dev/null | egrep -q '^Learn as '; then
+				((learned++))
+				printf "\r%${COLUMNS}s\r[%d] %s" '' $learned "$mail"
+			fi
+		done
+	done
+
+	echo
+	[ $learned -eq 0 ] && break
+done
+
+# vim: tabstop=4 shiftwidth=4

@@ -1,0 +1,19 @@
+The Content-Transfer-Encoding field's values are not case sensitive.
+https://www.rfc-editor.org/rfc/rfc2045#section-6.1
+
+Apple tends to prefer upper-cased, `QUOTED-PRINTABLE'.
+
+--- a/normalizemime.cc
++++ b/normalizemime.cc
+@@ -1373,9 +1373,9 @@
+   // Decide what to do.
+ 
+   string decodingerror;
+-  if (contentheaders["content-transfer-encoding"].value == "quoted-printable") {
++  if (strcasecmp(contentheaders["content-transfer-encoding"].value.c_str(), "quoted-printable") == 0) {
+     decodingerror = qpdecode (message, false);
+-  } else if (contentheaders["content-transfer-encoding"].value == "base64") {
++  } else if (strcasecmp(contentheaders["content-transfer-encoding"].value.c_str(), "base64") == 0) {
+     decodingerror = base64decode (message);
+   }
+ 
