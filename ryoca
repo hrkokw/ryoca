@@ -85,7 +85,7 @@ isolate (:thick_threshold:) /5.0/
 		}
 	}
 	alter (:classify_result:) /:*:classify_result: (pR=:*:pr:)/
-	call /:output_log:/ [:*:classify_result::*:_nl:]
+	call /:verbose_output:/ [:*:classify_result::*:_nl:]
 }
 
 # learn and exit if told & needed to
@@ -105,7 +105,7 @@ isolate (:thick_threshold:) /5.0/
 			}
 			alius
 			{
-				call /:output_log:/ [learn <:*:clf:> (:goodcss:):*:_nl:]
+				call /:verbose_output:/ [learn <:*:clf:> (:goodcss:):*:_nl:]
 				learn <:*:clf:> [:processed_input:] /:*:lcr:/ \
 					(:*:fileprefix::*:goodcss:)
 			}
@@ -122,7 +122,7 @@ isolate (:thick_threshold:) /5.0/
 			}
 			alius
 			{
-				call /:output_log:/ [learn <:*:clf:> (:junkcss:):*:_nl:]
+				call /:verbose_output:/ [learn <:*:clf:> (:junkcss:):*:_nl:]
 				learn <:*:clf:> [:processed_input:] /:*:lcr:/ \
 					(:*:fileprefix::*:junkcss:)
 			}
@@ -148,7 +148,7 @@ exit /0/
 #
 # verbose output
 #
-:output_log: (:log_message:)
+:verbose_output: (:log_message:)
 {
 	{
 		match [:verbose:] /SET/
