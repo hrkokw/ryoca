@@ -7,13 +7,6 @@ use Encode;
 
 my $n = 3;
 
-#sub _usage {
-#	printf(STDERR "Usage: %s [-n N] < input_file\n", __FILE__);
-#	exit 1;
-#}
-#use Getopt::Long;
-#GetOptions('n=i' => \$n) or _usage();
-
 while ($_ = Encode::decode_utf8(<STDIN>)) {
 	while (/ (?: \p{ascii}+ | \P{ascii}+ ) /gpx) {
 		for (my $part = ${^MATCH}) {
