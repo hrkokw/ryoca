@@ -20,7 +20,7 @@ for round in `seq 1 $max_rounds`; do
 
 	for target in ${targets[@]}; do
 		for mail in $(find "${target#*:}" -type f | sort); do
-			if ryoca --learn=${target%:*} --verbose < "$mail" 2>&1 >/dev/null | egrep -q '^Learn as '; then
+			if ryoca --learn=${target%:*} --verbose < "$mail" 2>&1 >/dev/null | egrep -q '^learn '; then
 				((learned++))
 				printf "\r%${COLUMNS}s\r[%d] %s" '' $learned "$mail"
 			fi

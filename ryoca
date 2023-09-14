@@ -1,9 +1,9 @@
-#! /usr/bin/crm114 -( fileprefix learn=good learn=junk correct force verbose dumptokens ) --
+#! /usr/bin/crm114 -( fileprefix learn=good learn=junk refute force verbose dumptokens ) --
 
 # possible command-line options
 isolate (:fileprefix:) /:*:_env_HOME:\/.ryoca/ <default>
 isolate (:learn:)
-isolate (:correct:)
+isolate (:refute:)
 isolate (:force:)
 isolate (:verbose:)
 isolate (:dumptokens:)
@@ -91,25 +91,23 @@ isolate (:thick_threshold:) /5.0/
 # learn and exit if told & needed to
 {
 	{
+		match [:refute:] /SET/
+		alter [:clf:] /refute :*:clf:/
+		alter [:force:] /SET/
+	}
+
+	{
 		match [:learn:] /good/
 		{
 			{
 				match [:classify_result:] /Good/
 				match [:force:] <absent> /SET/
-				call /:output_log:/ [Skip learning (already Good):*:_nl:]
 			}
 			alius
 			{
-				call /:output_log:/ [Learn as Good]
+				call /:output_log:/ [learn <:*:clf:> (:goodcss:):*:_nl:]
 				learn <:*:clf:> [:processed_input:] /:*:lcr:/ \
 					(:*:fileprefix::*:goodcss:)
-				{
-					match [:correct:] /SET/
-					call /:output_log:/ [ with correction]
-					learn <:*:clf: refute> [:processed_input:] /:*:lcr:/ \
-						(:*:fileprefix::*:junkcss:)
-				}
-				call /:output_log:/ [:*:_nl:]
 			}
 		}
 		goto /:exit_here:/
@@ -121,20 +119,12 @@ isolate (:thick_threshold:) /5.0/
 			{
 				match [:classify_result:] /Junk/
 				match [:force:] <absent> /SET/
-				call /:output_log:/ [Skip learning (already Junk):*:_nl:]
 			}
 			alius
 			{
-				call /:output_log:/ [Learn as Junk]
+				call /:output_log:/ [learn <:*:clf:> (:junkcss:):*:_nl:]
 				learn <:*:clf:> [:processed_input:] /:*:lcr:/ \
 					(:*:fileprefix::*:junkcss:)
-				{
-					match [:correct:] /SET/
-					call /:output_log:/ [ with correction]
-					learn <:*:clf: refute> [:processed_input:] /:*:lcr:/ \
-						(:*:fileprefix::*:goodcss:)
-				}
-				call /:output_log:/ [:*:_nl:]
 			}
 		}
 		goto /:exit_here:/
