@@ -1,4 +1,4 @@
-#! /usr/bin/crm114 -( fileprefix learn=good learn=junk refute force verbose dumptokens ) --
+#! /usr/bin/crm114 -( fileprefix learn=good learn=junk refute force verbose ) --
 
 # possible command-line options
 isolate (:fileprefix:) /:*:_env_HOME:\/.ryoca/ <default>
@@ -6,7 +6,6 @@ isolate (:learn:)
 isolate (:refute:)
 isolate (:force:)
 isolate (:verbose:)
-isolate (:dumptokens:)
 
 # css file names
 isolate (:goodcss:) /good.css/
@@ -44,17 +43,6 @@ isolate (:thick_threshold:) /5.0/
 {
 	isolate (:processed_input:)
 	syscall (:*:_dw:) (:processed_input:) / :*:text_preprocessor: /
-}
-
-# for debugging: print each token according to :lcr:, and exit
-{
-	match [:dumptokens:] /SET/
-	{
-		match <fromend> [:processed_input:] /:*:lcr:/ (:token:)
-		output /[:*:token:]:*:_nl:/
-		liaf
-	}
-	goto /:exit_here:/
 }
 
 # classify
