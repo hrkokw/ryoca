@@ -1,4 +1,4 @@
-#! /usr/bin/crm114 -( fileprefix learn=good learn=junk refute force verbose ) --
+#! /usr/bin/crm114 -( fileprefix learn=good learn=junk refute force verbose log ) --
 
 # possible command-line options
 isolate (:fileprefix:) /:*:_env_HOME:\/.ryoca/ <default>
@@ -6,6 +6,7 @@ isolate (:learn:)
 isolate (:refute:)
 isolate (:force:)
 isolate (:verbose:)
+isolate (:log:)
 
 # css file names
 isolate (:goodcss:) /good.css/
@@ -13,6 +14,9 @@ isolate (:junkcss:) /junk.css/
 
 # external command(s) to pre-process text for learning/classifying
 isolate (:text_preprocessor:) / normalizemime | wktng /
+
+# external command(s) to log results
+isolate (:logger:) / logger -p mail.info -t ryoca -i /
 
 # regex to split tokens for learning/classifying
 isolate (:lcr_ascii:) /[[:graph:]]+/
@@ -138,10 +142,23 @@ exit /0/
 #
 :verbose_output: (:log_message:)
 {
+	# to stderr
 	{
 		match [:verbose:] /SET/
 		output [stderr] /:*:log_message:/
 	}
+
+	# to syslog
+	{
+		match [:log:] /SET/
+
+		# grab Message-ID for syslog output
+		isolate (:message_id:) //
+		call /:mungmail_extract:/ [Message-ID] (:message_id:)
+
+		syscall (msgid=:*:message_id:: :*:log_message:) / :*:logger: /
+	}
+
 	return
 }
 
@@ -171,7 +188,22 @@ exit /0/
 	return
 }
 #
-# Delete all current headers of this type, insert ours instead.
+# Extract a header (first of them found)
+#
+:mungmail_extract: (:header_name:)
+{
+	# Extract the header with the given field type, and return that.
+	# Note that we add the colon here; don't put it into the header_name string.
+	call /:mungmail_grab_current_headers:/
+	{
+		match [:current_headers:] <nocase> (:: :desired_header:)  \
+			/(?:^|\n):*:header_name:[[:space:]]*:[[:space:]]*(([^\r\n]|\r?\n[[:space:]])*)/
+		return /:*:desired_header:/
+	}
+	return //
+}
+#
+# Delete all current headers of this type
 #
 :mungmail_delete: (:new_header:)
 {
@@ -190,7 +222,7 @@ exit /0/
 	return
 }
 #
-# Delete all current headers of this type, insert ours instead.
+# Replace all current headers of this type with ours
 #
 :mungmail_unique: (:new_header:)
 {
