@@ -9,18 +9,18 @@ my $n = 3;
 
 while ($_ = Encode::decode_utf8(<STDIN>)) {
 	while (/ (?: \p{ascii}+ | \P{ascii}+ ) /gpx) {
-		for (my $part = ${^MATCH}) {
-			if (/^ \p{ascii}+ $/x) {
-				print $part;
+		my $part = ${^MATCH};
+
+		if ($part =~ / \p{ascii} /x) {
+			print $part;
+		}
+		else {
+			my @mbchars = split(//, $part);
+			my @ngrams;
+			for (my $offset = 0; $offset == 0 or $offset <= scalar(@mbchars) - $n; $offset++) {
+				push @ngrams, join('', splice(@{[ @mbchars ]}, $offset, $n));
 			}
-			else {
-				my @mbchars = split(//, $part);
-				my @ngrams;
-				for (my $offset = 0; $offset == 0 or $offset <= scalar(@mbchars) - $n; $offset++) {
-					push @ngrams, join('', splice(@{[ @mbchars ]}, $offset, $n));
-				}
-				print Encode::encode_utf8(join(' ', '', @ngrams, ''));
-			}
+			print Encode::encode_utf8(join(' ', '', @ngrams, ''));
 		}
 	}
 }
