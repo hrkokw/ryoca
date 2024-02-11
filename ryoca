@@ -1,9 +1,8 @@
-#! /usr/bin/crm114 -( fileprefix learn=good learn=junk refute force verbose log ) --
+#! /usr/bin/crm114 -( fileprefix learn=good learn=junk force verbose log ) --
 
 # possible command-line options
 isolate (:fileprefix:) /:*:_env_HOME:\/.ryoca/ <default>
 isolate (:learn:)
-isolate (:refute:)
 isolate (:force:)
 isolate (:verbose:)
 isolate (:log:)
@@ -82,12 +81,6 @@ isolate (:thick_threshold:) /5.0/
 
 # learn and exit if told & needed to
 {
-	{
-		match [:refute:] /SET/
-		alter [:clf:] /refute :*:clf:/
-		alter [:force:] /SET/
-	}
-
 	{
 		match [:learn:] /good/
 		{
