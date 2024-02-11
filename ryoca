@@ -167,17 +167,7 @@ exit /0/
 {
 	# Grab the current headers
 	call /:mungmail_grab_current_headers:/
-	{
-		# respect the original newline sequence
-		{
-			match [:current_headers:] /\r\n/
-			alter (:current_headers:) /:*:current_headers::*:new_header:\r\n/
-		}
-		alius
-		{
-			alter (:current_headers:) /:*:current_headers::*:new_header:\n/
-		}
-	}
+	alter (:current_headers:) /:*:current_headers::*:new_header:\n/
 	return
 }
 #
@@ -190,7 +180,7 @@ exit /0/
 	call /:mungmail_grab_current_headers:/
 	{
 		match [:current_headers:] <nocase> (:: :desired_header:)  \
-			/(?:^|\n):*:header_name:[[:space:]]*:[[:space:]]*(([^\r\n]|\r?\n[[:space:]])*)/
+			/(?:^|\n):*:header_name: *: *(([^\n]|\n[[:space:]])*)/
 		return /:*:desired_header:/
 	}
 	return //
@@ -234,7 +224,7 @@ exit /0/
 {
 	{
 		# Grab everything before the first blank line
-		match (:: :current_headers:) /(([^\r\n]+\r?\n)+)\r?\n/
+		match (:: :current_headers:) /(([^\n]+\n)+)\n/
 		return
 	}
 	# if we got here, it wasn't a real message (void body, and/or no doubled
