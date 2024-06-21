@@ -43,7 +43,7 @@ FAQ
 ### Why CRM114 in 2020s?
 
 I had been using [Bogofilter](https://bogofilter.sourceforge.io/) for over a decade and been reasonably satisfied.
-But preprocessing multibyte texts (e.g. tokenization), which Bogofilter isn't capable of, was the challenge to give a try for me being Japanese speaker.
+But preprocessing multibyte texts (e.g. tokenization), which Bogofilter isn't capable of, was the challenge to give a try for me receiving many Japanese emails.
 
 CRM114 was the best to implement such email classifier without much effort.
 
