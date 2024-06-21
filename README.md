@@ -43,11 +43,11 @@ FAQ
 ### Why CRM114 in 2020s?
 
 I had been using [Bogofilter](https://bogofilter.sourceforge.io/) for over a decade and been reasonably satisfied.
-But preprocessing multibyte texts (e.g. tokenization), which Bogofilter isn't capable of, was the challenge to give a try for me receiving many Japanese emails.
+But preprocessing (e.g. tokenizing) multibyte texts, which Bogofilter isn't capable of, was the challenge to give a try for me receiving many Japanese emails.
 
 CRM114 was the best to implement such email classifier without much effort.
 
-Also, patching and installing CRM114 was super easy thanks to [Portage](https://wiki.gentoo.org/wiki/Portage) on my [Gentoo Linux](https://www.gentoo.org/) server.
+Also, patching and installing CRM114 (and normalizemime) was super easy thanks to [Portage](https://wiki.gentoo.org/wiki/Portage) on my [Gentoo Linux](https://www.gentoo.org/) server.
 
 ### Why not official scripts?
 
