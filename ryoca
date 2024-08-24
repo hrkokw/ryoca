@@ -146,8 +146,12 @@ exit /0/
 		match [:log:] /SET/
 
 		# grab Message-ID for syslog output
-		isolate (:message_id:) //
+		isolate (:message_id:)
 		call /:mungmail_extract:/ [Message-ID] (:message_id:)
+		{
+			match [:message_id:] /^$/
+			alter (:message_id:) /unspecified/
+		}
 
 		syscall (msgid=:*:message_id:: :*:log_message:) / :*:logger: /
 	}
