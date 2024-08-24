@@ -6,22 +6,20 @@ targets=(
 )
 max_rounds=10
 
-# Ryoca default: CHANGE IF NEEDED
+# Ryoca default; CHANGE IF NEEDED
 fileprefix="$HOME/.ryoca"
-
-rm -rfv ${fileprefix}.new
-ryoca="ryoca --fileprefix=${fileprefix}.new"
 
 for round in $(seq 1 $max_rounds); do
 	echo "[Round $round]"
-
 	learned=0
 
-	for target in ${targets[@]}; do
+	for target in "${targets[@]}"; do
 		for mail in $(find "${target#*:}/cur" -type f | sort); do
-			egrep -q 'dmarc=fail \(p=(reject|quarantine)' < "$mail" && continue
 
-			if $ryoca --learn=${target%:*} --verbose < "$mail" 2>&1 >/dev/null | egrep -q '^learn '; then
+			# Skip obvious spams; CHANGE OR DISABLE IF NEEDED
+			grep -E -q 'dmarc=fail \(p=(reject|quarantine)' < "$mail" && continue
+
+			if ryoca --fileprefix="$fileprefix" --learn="${target%:*}" --verbose < "$mail" 2>&1 >/dev/null | grep -E -q '^learn '; then
 				((learned++))
 				printf "\r%${COLUMNS}s\r[%d] %s" '' $learned "$mail"
 			fi
@@ -29,13 +27,7 @@ for round in $(seq 1 $max_rounds); do
 	done
 
 	echo
-
 	[ $learned -eq 0 ] && break
 done
-
-set -e
-rm -rv ${fileprefix}.old
-mv -v  ${fileprefix}{,.old}
-mv -v  ${fileprefix}{.new,}
 
 # vim: tabstop=4 shiftwidth=4
