@@ -1,13 +1,16 @@
 #!/bin/bash
 
+# Training targets; CHANGE IF NEEDED
 targets=(
 	"good:$HOME/Maildir/.Archives"
+	"good:$HOME/Maildir/.Trash"
 	"junk:$HOME/Maildir/.Junk"
 )
-max_rounds=10
 
 # Ryoca default; CHANGE IF NEEDED
 fileprefix="$HOME/.ryoca"
+
+max_rounds=10
 
 for round in $(seq 1 $max_rounds); do
 	echo "[Round $round]"
