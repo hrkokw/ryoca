@@ -1,5 +1,5 @@
 .PHONY: install test
-install: ryoca wktng
+install: ryoca bakshu
 	install -v -o root -g root -m 0755 -t /usr/local/bin/ $^
 
 test:

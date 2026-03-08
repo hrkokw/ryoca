@@ -5,7 +5,7 @@ Repo contents
 -------------
 
 * `ryoca` ... a email classifier
-* `wktng` ... a text preprocessor, written in Perl, to get non-ascii
+* `bakshu` ... a text preprocessor, written in Python, to get non-ascii
   parts in UTF-8 text separated into n-gram style
 * `ryoca-bootcamp` ... an ad-hoc Bash script to initialize and update
   statistics in TOE strategy (read & modify before use!)

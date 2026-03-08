@@ -12,7 +12,7 @@ isolate (:goodcss:) /good.css/
 isolate (:junkcss:) /junk.css/
 
 # external command(s) to pre-process text for learning/classifying
-isolate (:text_preprocessor:) / normalizemime | wktng /
+isolate (:text_preprocessor:) / normalizemime | bakshu /
 
 # external command(s) to log results
 isolate (:logger:) / logger -p mail.info -t ryoca -i /
