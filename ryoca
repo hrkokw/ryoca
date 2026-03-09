@@ -1,4 +1,4 @@
-#! /usr/bin/crm114 -( fileprefix learn=good learn=junk force verbose log ) --
+#! /usr/bin/crm114 -( fileprefix learn=good learn=junk force verbose log debug ) --
 
 # possible command-line options
 isolate (:fileprefix:) /:*:_env_HOME:\/.ryoca/ <default>
@@ -6,6 +6,7 @@ isolate (:learn:)
 isolate (:force:)
 isolate (:verbose:)
 isolate (:log:)
+isolate (:debug:)
 
 # css file names
 isolate (:goodcss:) /good.css/
@@ -46,6 +47,16 @@ isolate (:thick_threshold:) /5.0/
 {
 	isolate (:processed_input:)
 	syscall (:*:_dw:) (:processed_input:) / :*:text_preprocessor: /
+}
+
+# for debugging: print each token to stderr according to :lcr:
+{
+	match [:debug:] /SET/
+	{
+		match <fromend> [:processed_input:] /:*:lcr:/ (:token:)
+		output [stderr] /[:*:token:]:*:_nl:/
+		liaf
+	}
 }
 
 # classify
