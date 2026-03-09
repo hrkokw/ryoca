@@ -26,9 +26,9 @@ class Bakshu:
 
         mb_str = match.group('mb')
         if len(mb_str) <= self.__window:
-            return ' '.join(['', mb_str, ''])
+            return mb_str
         grams = [mb_str[i:(i + self.__window)] for i in range(len(mb_str) - (self.__window - 1))]
-        return ' '.join([''] + grams + [''])
+        return ' '.join(grams)
 
     def print(self):
         print(self.__str, end='')
@@ -39,14 +39,16 @@ class Bakshu:
 
 class TestBakshu(unittest.TestCase):
     Tests = {
-        "abc あいうえお def": "abc  あいう いうえ うえお  def",
-        "abcあいうえおdef": "abc あいう いうえ うえお def",
-        "abcあいう\nえおdef": "abc あいう \n えお def",
-        "abcあいうdefえおghi": "abc あいう def えお ghi",
-        "abcあいうdef": "abc あいう def",
-        "あいうえお": " あいう いうえ うえお ",
+        "あいうえおabcかきくけこ": "あいう いうえ うえおabcかきく きくけ くけこ",
+        "あいうえおabc": "あいう いうえ うえおabc",
+        "abc あいうえお def": "abc あいう いうえ うえお def",
+        "abcあいうえおdef": "abcあいう いうえ うえおdef",
+        "abcあいう\nえおdef": "abcあいう\nえおdef",
+        "abcあいうdefえおghi": "abcあいうdefえおghi",
+        "abcあいうdef": "abcあいうdef",
+        "あいうえお": "あいう いうえ うえお",
         "a b c": "a b c",
-        "あい": " あい ",
+        "あい": "あい",
         "a": "a",
     }
 
