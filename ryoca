@@ -32,105 +32,105 @@ isolate (:thick_threshold:) /5.0/
 
 # prepare fileprefix
 {
-	# add trailing slash
-	{
-		match [:fileprefix:] /[^\/]$/
-		alter (:fileprefix:) /:*:fileprefix:\//
-	}
-	# create directory and files if absent
-	syscall / test -d :*:fileprefix: || install -d :*:fileprefix: -m 0700 /
-	syscall / test -f :*:fileprefix::*:goodcss: || cssutil -b -r :*:fileprefix::*:goodcss: >\/dev\/null /
-	syscall / test -f :*:fileprefix::*:junkcss: || cssutil -b -r :*:fileprefix::*:junkcss: >\/dev\/null /
+    # add trailing slash
+    {
+        match [:fileprefix:] /[^\/]$/
+        alter (:fileprefix:) /:*:fileprefix:\//
+    }
+    # create directory and files if absent
+    syscall / test -d :*:fileprefix: || install -d :*:fileprefix: -m 0700 /
+    syscall / test -f :*:fileprefix::*:goodcss: || cssutil -b -r :*:fileprefix::*:goodcss: >\/dev\/null /
+    syscall / test -f :*:fileprefix::*:junkcss: || cssutil -b -r :*:fileprefix::*:junkcss: >\/dev\/null /
 }
 
 # preprocess input text
 {
-	isolate (:processed_input:)
-	syscall (:*:_dw:) (:processed_input:) / :*:text_preprocessor: /
+    isolate (:processed_input:)
+    syscall (:*:_dw:) (:processed_input:) / :*:text_preprocessor: /
 }
 
 # for debugging: print each token to stderr according to :lcr:
 {
-	match [:debug:] /SET/
-	{
-		match <fromend> [:processed_input:] /:*:lcr:/ (:token:)
-		output [stderr] /[:*:token:]:*:_nl:/
-		liaf
-	}
+    match [:debug:] /SET/
+    {
+        match <fromend> [:processed_input:] /:*:lcr:/ (:token:)
+        output [stderr] /[:*:token:]:*:_nl:/
+        liaf
+    }
 }
 
 # classify
 {
-	isolate (:classify_status:)
-	classify <:*:clf:> [:processed_input:] /:*:lcr:/ \
-		(:*:fileprefix::*:goodcss: :*:fileprefix::*:junkcss:) \
-		(:classify_status:)
+    isolate (:classify_status:)
+    classify <:*:clf:> [:processed_input:] /:*:lcr:/ \
+        (:*:fileprefix::*:goodcss: :*:fileprefix::*:junkcss:) \
+        (:classify_status:)
 
-	isolate (:pr:)
-	match [:classify_status:] <nomultiline> \
-		/^#0.* pR: *([-.0-9]+)/ ( :: :pr: )
+    isolate (:pr:)
+    match [:classify_status:] <nomultiline> \
+        /^#0.* pR: *([-.0-9]+)/ ( :: :pr: )
 
-	isolate (:classify_result:) /X-CRM114-Status:/
-	{
-		{
-			eval /:@: :*:pr: > :*:thick_threshold: :/
-			alter (:classify_result:) /:*:classify_result: Good/
-		}
-		alius
-		{
-			eval /:@: :*:pr: < (0 - :*:thick_threshold:) :/
-			alter (:classify_result:) /:*:classify_result: Junk/
-		}
-		alius
-		{
-			alter (:classify_result:) /:*:classify_result: Unsure/
-		}
-	}
-	alter (:classify_result:) /:*:classify_result: (pR=:*:pr:)/
-	call /:verbose_output:/ [:*:classify_result::*:_nl:]
+    isolate (:classify_result:) /X-CRM114-Status:/
+    {
+        {
+            eval /:@: :*:pr: > :*:thick_threshold: :/
+            alter (:classify_result:) /:*:classify_result: Good/
+        }
+        alius
+        {
+            eval /:@: :*:pr: < (0 - :*:thick_threshold:) :/
+            alter (:classify_result:) /:*:classify_result: Junk/
+        }
+        alius
+        {
+            alter (:classify_result:) /:*:classify_result: Unsure/
+        }
+    }
+    alter (:classify_result:) /:*:classify_result: (pR=:*:pr:)/
+    call /:verbose_output:/ [:*:classify_result::*:_nl:]
 }
 
 # learn and exit if told & needed to
 {
-	{
-		match [:learn:] /good/
-		{
-			{
-				match [:classify_result:] /Good/
-				match [:force:] <absent> /SET/
-			}
-			alius
-			{
-				call /:verbose_output:/ [learn <:*:clf:> (:goodcss:):*:_nl:]
-				learn <:*:clf:> [:processed_input:] /:*:lcr:/ \
-					(:*:fileprefix::*:goodcss:)
-			}
-		}
-		goto /:exit_here:/
-	}
-	alius
-	{
-		match [:learn:] /junk/
-		{
-			{
-				match [:classify_result:] /Junk/
-				match [:force:] <absent> /SET/
-			}
-			alius
-			{
-				call /:verbose_output:/ [learn <:*:clf:> (:junkcss:):*:_nl:]
-				learn <:*:clf:> [:processed_input:] /:*:lcr:/ \
-					(:*:fileprefix::*:junkcss:)
-			}
-		}
-		goto /:exit_here:/
-	}
+    {
+        match [:learn:] /good/
+        {
+            {
+                match [:classify_result:] /Good/
+                match [:force:] <absent> /SET/
+            }
+            alius
+            {
+                call /:verbose_output:/ [learn <:*:clf:> (:goodcss:):*:_nl:]
+                learn <:*:clf:> [:processed_input:] /:*:lcr:/ \
+                    (:*:fileprefix::*:goodcss:)
+            }
+        }
+        goto /:exit_here:/
+    }
+    alius
+    {
+        match [:learn:] /junk/
+        {
+            {
+                match [:classify_result:] /Junk/
+                match [:force:] <absent> /SET/
+            }
+            alius
+            {
+                call /:verbose_output:/ [learn <:*:clf:> (:junkcss:):*:_nl:]
+                learn <:*:clf:> [:processed_input:] /:*:lcr:/ \
+                    (:*:fileprefix::*:junkcss:)
+            }
+        }
+        goto /:exit_here:/
+    }
 }
 
 # add header and print
 {
-	call /:mungmail_unique:/ [:*:classify_result:]
-	accept
+    call /:mungmail_unique:/ [:*:classify_result:]
+    accept
 }
 
 # exit normally
@@ -146,28 +146,28 @@ exit /0/
 #
 :verbose_output: (:log_message:)
 {
-	# to stderr
-	{
-		match [:verbose:] /SET/
-		output [stderr] /:*:log_message:/
-	}
+    # to stderr
+    {
+        match [:verbose:] /SET/
+        output [stderr] /:*:log_message:/
+    }
 
-	# to syslog
-	{
-		match [:log:] /SET/
+    # to syslog
+    {
+        match [:log:] /SET/
 
-		# grab Message-ID for syslog output
-		isolate (:message_id:)
-		call /:mungmail_extract:/ [Message-ID] (:message_id:)
-		{
-			match [:message_id:] /^$/
-			alter (:message_id:) /unspecified/
-		}
+        # grab Message-ID for syslog output
+        isolate (:message_id:)
+        call /:mungmail_extract:/ [Message-ID] (:message_id:)
+        {
+            match [:message_id:] /^$/
+            alter (:message_id:) /unspecified/
+        }
 
-		syscall (msgid=:*:message_id:: :*:log_message:) / :*:logger: /
-	}
+        syscall (msgid=:*:message_id:: :*:log_message:) / :*:logger: /
+    }
 
-	return
+    return
 }
 
 ############################################################
@@ -180,83 +180,83 @@ exit /0/
 #
 :mungmail_add: (:new_header:)
 {
-	# Grab the current headers
-	call /:mungmail_grab_current_headers:/
-	alter (:current_headers:) /:*:current_headers::*:new_header:\n/
-	return
+    # Grab the current headers
+    call /:mungmail_grab_current_headers:/
+    alter (:current_headers:) /:*:current_headers::*:new_header:\n/
+    return
 }
 #
 # Extract a header (first of them found)
 #
 :mungmail_extract: (:header_name:)
 {
-	# Extract the header with the given field type, and return that.
-	# Note that we add the colon here; don't put it into the header_name string.
-	call /:mungmail_grab_current_headers:/
-	{
-		match [:current_headers:] <nocase> (:: :desired_header:)  \
-			/(?:^|\n):*:header_name: *: *(([^\n]|\n[[:space:]])*)/
-		return /:*:desired_header:/
-	}
-	return //
+    # Extract the header with the given field type, and return that.
+    # Note that we add the colon here; don't put it into the header_name string.
+    call /:mungmail_grab_current_headers:/
+    {
+        match [:current_headers:] <nocase> (:: :desired_header:)  \
+            /(?:^|\n):*:header_name: *: *(([^\n]|\n[[:space:]])*)/
+        return /:*:desired_header:/
+    }
+    return //
 }
 #
 # Delete all current headers of this type
 #
 :mungmail_delete: (:new_header:)
 {
-	call /:mungmail_grab_current_headers:/
-	{
-		match (:new_header_type:) [:new_header:] /[[:graph:]]+/
-	}
-	# a LIAF-loop to delete any header (including continuations) that has a type
-	# that matches the new_header_type.
-	{
-		match [:current_headers:] (:kill_this_line:) \
-			/:*:new_header_type: ([^\n]|\n[[:space:]])*\n/
-		alter (:kill_this_line:) //
-		liaf
-	}
-	return
+    call /:mungmail_grab_current_headers:/
+    {
+        match (:new_header_type:) [:new_header:] /[[:graph:]]+/
+    }
+    # a LIAF-loop to delete any header (including continuations) that has a type
+    # that matches the new_header_type.
+    {
+        match [:current_headers:] (:kill_this_line:) \
+            /:*:new_header_type: ([^\n]|\n[[:space:]])*\n/
+        alter (:kill_this_line:) //
+        liaf
+    }
+    return
 }
 #
 # Replace all current headers of this type with ours
 #
 :mungmail_unique: (:new_header:)
 {
-	call /:mungmail_grab_current_headers:/
-	{
-		match (:new_header_type:) [:new_header:] /[[:graph:]]+/
-	}
-	call /:mungmail_delete:/ [:*:new_header:]
-	call /:mungmail_add:/ [:*:new_header:]
-	return
+    call /:mungmail_grab_current_headers:/
+    {
+        match (:new_header_type:) [:new_header:] /[[:graph:]]+/
+    }
+    call /:mungmail_delete:/ [:*:new_header:]
+    call /:mungmail_add:/ [:*:new_header:]
+    return
 }
 #
 #  Helper routine to get the current mail headers of :_dw:
 #
 :mungmail_grab_current_headers:
 {
-	{
-		# Grab everything before the first blank line
-		match (:: :current_headers:) /(([^\n]+\n)+)\n/
-		return
-	}
-	# if we got here, it wasn't a real message (void body, and/or no doubled
-	# newline) but it might still have useful text anyway.
-	# Is there a final newline?
-	{
-		match (:current_headers:) /^.*\n$/
-		return
-	}
-	# if we got to here, then there wasn't even a final newline.
-	# That's a violation of RFC, we'll add it.
-	{
-		alter (:_dw:) /:*:_dw:\n/
-		match (:current_headers:) /.+/
-		return
-	}
-	fault / Couldn't manage to find the headers, though I tried really hard\n/
+    {
+        # Grab everything before the first blank line
+        match (:: :current_headers:) /(([^\n]+\n)+)\n/
+        return
+    }
+    # if we got here, it wasn't a real message (void body, and/or no doubled
+    # newline) but it might still have useful text anyway.
+    # Is there a final newline?
+    {
+        match (:current_headers:) /^.*\n$/
+        return
+    }
+    # if we got to here, then there wasn't even a final newline.
+    # That's a violation of RFC, we'll add it.
+    {
+        alter (:_dw:) /:*:_dw:\n/
+        match (:current_headers:) /.+/
+        return
+    }
+    fault / Couldn't manage to find the headers, though I tried really hard\n/
 }
 
 ############################################################
@@ -265,8 +265,8 @@ exit /0/
 #
 trap (:broken_program_message:) /.*/
 {
-	output [stderr] /:*:broken_program_message:/
+    output [stderr] /:*:broken_program_message:/
 }
 exit /1/
 
-# vim: syntax=crm tabstop=2 shiftwidth=2
+# vim: syntax=crm

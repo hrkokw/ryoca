@@ -2,9 +2,9 @@
 
 # Training targets; CHANGE IF NEEDED
 targets=(
-	"good:$HOME/Maildir/.Archives"
-	"good:$HOME/Maildir/.Trash"
-	"junk:$HOME/Maildir/.Junk"
+    "good:$HOME/Maildir/.Archives"
+    "good:$HOME/Maildir/.Trash"
+    "junk:$HOME/Maildir/.Junk"
 )
 
 # Ryoca default; CHANGE IF NEEDED
@@ -13,24 +13,22 @@ fileprefix="$HOME/.ryoca"
 max_rounds=10
 
 for round in $(seq 1 $max_rounds); do
-	echo "[Round $round]"
-	learned=0
+    echo "[Round $round]"
+    learned=0
 
-	for target in "${targets[@]}"; do
-		for mail in $(find "${target#*:}/cur" -type f | sort); do
+    for target in "${targets[@]}"; do
+        for mail in $(find "${target#*:}/cur" -type f | sort); do
 
-			# Skip obvious spams; CHANGE OR DISABLE IF NEEDED
-			grep -E -q 'dmarc=fail \(p=(reject|quarantine)' < "$mail" && continue
+            # Skip obvious spams; CHANGE OR DISABLE IF NEEDED
+            grep -E -q 'dmarc=fail \(p=(reject|quarantine)' < "$mail" && continue
 
-			if ryoca --fileprefix="$fileprefix" --learn="${target%:*}" --verbose < "$mail" 2>&1 >/dev/null | grep -E -q '^learn '; then
-				((learned++))
-				printf "\r%${COLUMNS}s\r[%d] %s" '' $learned "$mail"
-			fi
-		done
-	done
+            if ryoca --fileprefix="$fileprefix" --learn="${target%:*}" --verbose < "$mail" 2>&1 >/dev/null | grep -E -q '^learn '; then
+                ((learned++))
+                printf "\r%${COLUMNS}s\r[%d] %s" '' $learned "$mail"
+            fi
+        done
+    done
 
-	echo
-	[ $learned -eq 0 ] && break
+    echo
+    [ $learned -eq 0 ] && break
 done
-
-# vim: tabstop=4 shiftwidth=4
